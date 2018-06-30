@@ -42,9 +42,9 @@ float pixelsArraySize = COLS * ROWS;
 float pixels[COLS * ROWS];
 float reversePixels[COLS * ROWS];
 
-byte speed_setting = 1 ; // High is 1 , Low is 2
-bool reverseScreen = false;
-//bool reverseScreen = true;
+byte speed_setting = 2 ; // High is 1 , Low is 2
+//bool reverseScreen = false;
+bool reverseScreen = true;
 
 #define INTERPOLATED_COLS 32
 #define INTERPOLATED_ROWS 32
@@ -54,14 +54,14 @@ paramsMLX90640 mlx90640;
 float signedMag12ToFloat(uint16_t val);
 
 //low range of the sensor (this will be blue on the screen)
-int MINTEMP = 20; // For color mapping
-int min_v = 20; //Value of current min temp
+int MINTEMP = 24; // For color mapping
+int min_v = 24; //Value of current min temp
 int min_cam_v = -40; // Spec in datasheet
 
 
 //high range of the sensor (this will be red on the screen)
-int MAXTEMP = 45; // For color mapping
-int max_v = 45; //Value of current max temp
+int MAXTEMP = 35; // For color mapping
+int max_v = 35; //Value of current max temp
 int max_cam_v = 300; // Spec in datasheet
 int resetMaxTemp = 45;
 
@@ -269,9 +269,10 @@ void loop()
     {
       if (x % COLS == 0) //32 values wide
       {
-        for (int j = 0 + x, k = COLS + x; j < COLS + x ; j++, k--)
+        for (int j = 0 + x, k = (COLS-1) + x; j < COLS + x ; j++, k--)
         {
           reversePixels[j] = pixels[k];
+  //         Serial.print(x);Serial.print(" = Rev "); Serial.print(j);Serial.print(" ,  Nor ");Serial.println(k);
         }
       }
     }

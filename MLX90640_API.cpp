@@ -373,7 +373,8 @@ void MLX90640_CalculateTo(uint16_t *frameData, paramsMLX90640 *params, float emi
 
       alphaCompensated = (params->alpha[pixelNumber] - params->tgc * ((1 - pattern) * params->cpAlpha[0] + pattern * params->cpAlpha[1])) * (1 + params->KsTa * (ta - 25));
 
-      Sx = pow((double)alphaCompensated, (double)3) * (irData + alphaCompensated * taTr);
+     // Sx = pow((double)alphaCompensated, (double)3) * (irData + alphaCompensated * taTr);
+     Sx = (double)alphaCompensated * alphaCompensated * alphaCompensated * (irData + alphaCompensated * taTr); //improved from 5fps to 7 fps
       Sx = sqrt(sqrt(Sx)) * params->ksTo[1];
 
       To = sqrt(sqrt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;

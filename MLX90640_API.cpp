@@ -37,6 +37,7 @@ int ExtractDeviatingPixels(uint16_t *eeData, paramsMLX90640 *mlx90640);
 int CheckAdjacentPixels(uint16_t pix1, uint16_t pix2);
 int CheckEEPROMValid(uint16_t *eeData);
 
+float qurt(float x); // sqrt(sqrt(x))
 
 int MLX90640_DumpEE(uint8_t slaveAddr, uint16_t *eeData)
 {
@@ -373,10 +374,16 @@ void MLX90640_CalculateTo(uint16_t *frameData, paramsMLX90640 *params, float emi
 
       alphaCompensated = (params->alpha[pixelNumber] - params->tgc * ((1 - pattern) * params->cpAlpha[0] + pattern * params->cpAlpha[1])) * (1 + params->KsTa * (ta - 25));
 
-      Sx = pow((double)alphaCompensated, (double)3) * (irData + alphaCompensated * taTr);
-      Sx = sqrt(sqrt(Sx)) * params->ksTo[1];
+      //Sx = pow((double)alphaCompensated, (double)3) * (irData + alphaCompensated * taTr);
+      Sx = alphaCompensated*alphaCompensated*alphaCompensated * (irData + alphaCompensated * taTr);
+      
+      //Increase performance with lossing little accurate
+      //Sx = sqrt(sqrt(Sx)) * params->ksTo[1];
+      Sx = qurt(Sx) * params->ksTo[1];
 
-      To = sqrt(sqrt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
+      //Increase performance with lossing little accurate
+      //To = sqrt(sqrt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
+      To = qurt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
 
       if (To < params->ct[1])
       {
@@ -395,8 +402,9 @@ void MLX90640_CalculateTo(uint16_t *frameData, paramsMLX90640 *params, float emi
         range = 3;
       }
 
-      To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15;
-
+      //Increase performance with lossing little accurate
+      //To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15;
+      To = qurt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr) - 273.15;
       result[pixelNumber] = To;
     }
   }
@@ -1213,4 +1221,27 @@ int CheckEEPROMValid(uint16_t *eeData)
   }
 
   return -7;
+}
+
+//------------------------------------------------------------------------------
+float qurt(float x)
+{
+   union {
+      float f;
+      uint32_t i;
+   } conv;
+   float x2;
+   const float threehalfs = 1.5F;
+   
+   x2 = x * 0.5F;
+   conv.f = x;
+   conv.i = 0x5F375A86 - ( conv.i >> 1 );
+   conv.f = conv.f * ( threehalfs - ( x2 * conv.f * conv.f ) );   
+   conv.f = conv.f * ( threehalfs - ( x2 * conv.f * conv.f ) );
+   
+   x2 = conv.f * 0.5F;
+   conv.i = 0x5F375A86 - ( conv.i >> 1 );
+   conv.f = conv.f * ( threehalfs - ( x2 * conv.f * conv.f ) );   
+   conv.f = conv.f * ( threehalfs - ( x2 * conv.f * conv.f ) );
+   return conv.f;
 }

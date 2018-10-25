@@ -1,3 +1,4 @@
+#include "FastQuadRoot.h"
 // Refer to Fast Inverse Square Root
 float qurt(float x)
 {

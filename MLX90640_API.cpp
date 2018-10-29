@@ -17,6 +17,7 @@
 #include "MLX90640_I2C_Driver.h"
 #include "MLX90640_API.h"
 #include <math.h>
+#include "FastQuadRoot.h"
 
 #include <Arduino.h>
 
@@ -375,9 +376,11 @@ void MLX90640_CalculateTo(uint16_t *frameData, paramsMLX90640 *params, float emi
 
      // Sx = pow((double)alphaCompensated, (double)3) * (irData + alphaCompensated * taTr);
      Sx = (double)alphaCompensated * alphaCompensated * alphaCompensated * (irData + alphaCompensated * taTr); //improved from 5fps to 7 fps
-      Sx = sqrt(sqrt(Sx)) * params->ksTo[1];
+      //Sx = sqrt(sqrt(Sx)) * params->ksTo[1];
+      Sx = qurt(Sx) * params->ksTo[1];
 
-      To = sqrt(sqrt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
+      //To = sqrt(sqrt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
+      To = qurt(irData / (alphaCompensated * (1 - params->ksTo[1] * 273.15) + Sx) + taTr) - 273.15;
 
       if (To < params->ct[1])
       {
@@ -395,8 +398,9 @@ void MLX90640_CalculateTo(uint16_t *frameData, paramsMLX90640 *params, float emi
       {
         range = 3;
       }
-
-      To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15;
+      
+      //To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - 273.15;
+      To = qurt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr) - 273.15;
 
       result[pixelNumber] = To;
     }
